@@ -127,6 +127,7 @@ function say(t){
 async function play(){
   if(!qs.length)return;
   const id=++run;playing=true;$('play').textContent='⏸ থামান';
+  try{wl=await navigator.wakeLock.request('screen')}catch(e){}
   while(id===run){
     const q=qs[i],R=+$('reps').value;
     for(let r=1;r<=R;r++){
@@ -135,7 +136,7 @@ async function play(){
       await say(q.q+($('readopts').checked?'। '+q.o.join('। '):''));
       await sleep(+$('gap').value);if(id!==run)return;
       show(true);$('stat').textContent='প্রশ্ন '+(i+1)+' / '+qs.length+' · বার '+r+' / '+R;
-      await say('উত্তর: '+q.a);
+      await say(q.a);
       await sleep(+$('between').value);
     }
     if(id!==run)return;
@@ -145,7 +146,8 @@ async function play(){
     else{stop();$('stat').textContent='সব প্রশ্ন শেষ ✔';return}
   }
 }
-function stop(){run++;playing=false;speechSynthesis.cancel();$('play').textContent='▶ শুরু'}
+let wl=null;
+function stop(){run++;playing=false;speechSynthesis.cancel();try{wl&&wl.release()}catch(e){}$('play').textContent='▶ শুরু'}
 function go(d){const was=playing;stop();i=(i+d+qs.length)%qs.length;show(false);if(was)play()}
 
 $('play').onclick=()=>playing?stop():play();
