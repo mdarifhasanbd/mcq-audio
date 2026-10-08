@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>শুনে মুখস্থ — MCQ অডিও রিভিশন</title>
+<style>
+:root{--bg:#f3f6f4;--ink:#16302b;--mut:#5b6f6a;--card:#fff;--line:#d5e0dc;--acc:#0b7a6b;--acc2:#e0f2ee;--ans:#b3261e}
+@media(prefers-color-scheme:dark){:root{--bg:#10201d;--ink:#e6f2ef;--mut:#9bb3ad;--card:#18302b;--line:#2b4a43;--acc:#4cc9b0;--acc2:#1f3f38;--ans:#ff8a80}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Nirmala UI","Noto Sans Bengali","Hind Siliguri",system-ui,sans-serif;line-height:1.6}
+main{max-width:640px;margin:0 auto;padding:16px}
+h1{font-size:1.3rem;margin:8px 0 12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:14px}
+#q{font-size:1.25rem;font-weight:600;min-height:3.2em}
+#opts{margin:8px 0;color:var(--mut);font-size:.95rem}
+#ans{font-size:1.2rem;font-weight:700;color:var(--ans);background:var(--acc2);border-radius:8px;padding:10px 12px;margin-top:8px}
+#stat{color:var(--mut);font-size:.9rem;margin-top:8px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
+button{font:inherit;border:1px solid var(--acc);background:var(--card);color:var(--ink);border-radius:8px;padding:10px 14px;cursor:pointer;min-height:44px}
+button.main{background:var(--acc);color:#fff;font-weight:700;flex:1}
+button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+label{display:flex;flex-direction:column;font-size:.85rem;color:var(--mut);gap:2px;flex:1;min-width:120px}
+select,input,textarea{font:inherit;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:8px;padding:8px}
+textarea{width:100%;min-height:220px}
+small{color:var(--mut)}
+</style>
+</head>
+<body>
+<main>
+<h1>শুনে মুখস্থ</h1>
+
+<section class="card" aria-live="polite">
+  <div id="q">নিচে MCQ পেস্ট করে “লোড করুন” চাপুন।</div>
+  <div id="opts"></div>
+  <div id="ans" hidden></div>
+  <div id="stat"></div>
+  <div class="row">
+    <button id="prev" aria-label="আগের প্রশ্ন">⏮ আগে</button>
+    <button id="play" class="main">▶ শুরু</button>
+    <button id="next" aria-label="পরের প্রশ্ন">পরে ⏭</button>
+  </div>
+</section>
+
+<section class="card">
+  <div class="row" style="margin-top:0">
+    <label>পুনরাবৃত্তি
+      <select id="reps"><option>1</option><option>2</option><option selected>3</option><option>5</option><option>10</option></select></label>
+    <label>প্রশ্ন→উত্তর বিরতি (সেকেন্ড)
+      <input id="gap" type="number" min="0" max="15" step="0.5" value="3"></label>
+    <label>পুনরাবৃত্তির মাঝে বিরতি
+      <input id="between" type="number" min="0" max="15" step="0.5" value="2"></label>
+  </div>
+  <div class="row">
+    <label>গতি
+      <select id="rate"><option value="0.7">ধীর</option><option value="0.9" selected>স্বাভাবিক</option><option value="1.1">দ্রুত</option></select></label>
+    <label>ভয়েস <select id="voice"></select></label>
+    <label>ক্রম
+      <select id="order"><option value="seq">ধারাবাহিক</option><option value="rand">র‍্যান্ডম</option></select></label>
+  </div>
+  <div class="row"><label style="flex-direction:row;align-items:center"><input id="loop" type="checkbox" style="width:auto"> শেষ হলে আবার প্রথম থেকে</label></div>
+  <div class="row"><label style="flex-direction:row;align-items:center"><input id="readopts" type="checkbox" style="width:auto"> প্রশ্নের সাথে অপশনও পড়বে</label></div>
+</section>
+
+<section class="card">
+  <label for="data">MCQ পেস্ট করুন (প্রশ্নগুলোর মাঝে ফাঁকা লাইন)</label>
+  <textarea id="data" spellcheck="false"></textarea>
+  <div class="row"><button id="load" class="main">লোড করুন</button></div>
+  <small>ফরম্যাট: প্রথম লাইনে প্রশ্ন, তারপর A. B. C. D. (বা ক. খ. গ. ঘ.) অপশন, শেষে <b>Ans: B</b>। অপশন ছাড়া হলে <b>Ans: শাপলা</b> লিখুন। ডেটা এই ডিভাইসেই সেভ থাকে।</small>
+</section>
+</main>
+
+<script>
+const SAMPLE=`বাংলাদেশের জাতীয় ফুল কোনটি?
+A. গোলাপ
+B. শাপলা
+C. জবা
+D. বেলি
+Ans: B
+
+বাংলাদেশের স্বাধীনতা দিবস কবে?
+A. ১৬ ডিসেম্বর
+B. ২১ ফেব্রুয়ারি
+C. ২৬ মার্চ
+D. ১৭ এপ্রিল
+Ans: C`;
+const $=id=>document.getElementById(id);
+let qs=[],i=0,run=0,playing=false,voices=[];
+const LET={A:0,B:1,C:2,D:3,a:0,b:1,c:2,d:3,'ক':0,'খ':1,'গ':2,'ঘ':3};
+
+function parse(t){
+  return t.split(/\n\s*\n/).map(b=>{
+    const L=b.split('\n').map(s=>s.trim()).filter(Boolean);
+    if(L.length<2)return null;
+    let q=L[0].replace(/^(\d+|[০-৯]+)[\).\s]+|^(Q|প্রশ্ন)\s*[:.]\s*/i,'');
+    const o=[];let ans='';
+    for(const l of L.slice(1)){
+      const m=l.match(/^\(?([A-Da-dকখগঘ])[\).]\s*(.+)$/);
+      const a=l.match(/^(ans|answer|উত্তর|সঠিক[^:]*)\s*[:：]\s*(.+)$/i);
+      if(a)ans=a[2].trim();else if(m)o.push({k:m[1],t:m[2].trim()});
+    }
+    let txt=ans;
+    const k=ans.replace(/[\s.)(]/g,'');
+    if(k.length===1&&k in LET&&o[LET[k]])txt=o[LET[k]].t;
+    else{const f=o.find(x=>x.t===ans);if(f)txt=f.t}
+    return txt?{q,o:o.map(x=>x.k.toUpperCase()+'. '+x.t),a:txt}:null;
+  }).filter(Boolean);
+}
+
+function show(revealed){
+  const q=qs[i];if(!q)return;
+  $('q').textContent=q.q;
+  $('opts').innerHTML='';
+  q.o.forEach(x=>{const d=document.createElement('div');d.textContent=x;$('opts').appendChild(d)});
+  $('ans').hidden=!revealed;$('ans').textContent='উত্তর: '+q.a;
+  $('stat').textContent='প্রশ্ন '+(i+1)+' / '+qs.length;
+}
+const sleep=(s,id)=>new Promise(r=>setTimeout(r,s*1000));
+function say(t){
+  return new Promise(res=>{
+    const u=new SpeechSynthesisUtterance(t);
+    u.lang='bn-BD';u.rate=+$('rate').value;
+    const v=voices[$('voice').selectedIndex];if(v){u.voice=v;u.lang=v.lang}
+    u.onend=u.onerror=res;speechSynthesis.speak(u);
+  });
+}
+async function play(){
+  if(!qs.length)return;
+  const id=++run;playing=true;$('play').textContent='⏸ থামান';
+  while(id===run){
+    const q=qs[i],R=+$('reps').value;
+    for(let r=1;r<=R;r++){
+      if(id!==run)return;
+      show(false);$('stat').textContent='প্রশ্ন '+(i+1)+' / '+qs.length+' · বার '+r+' / '+R;
+      await say(q.q+($('readopts').checked?'। '+q.o.join('। '):''));
+      await sleep(+$('gap').value);if(id!==run)return;
+      show(true);$('stat').textContent='প্রশ্ন '+(i+1)+' / '+qs.length+' · বার '+r+' / '+R;
+      await say('উত্তর: '+q.a);
+      await sleep(+$('between').value);
+    }
+    if(id!==run)return;
+    if($('order').value==='rand')i=Math.floor(Math.random()*qs.length);
+    else if(i<qs.length-1)i++;
+    else if($('loop').checked)i=0;
+    else{stop();$('stat').textContent='সব প্রশ্ন শেষ ✔';return}
+  }
+}
+function stop(){run++;playing=false;speechSynthesis.cancel();$('play').textContent='▶ শুরু'}
+function go(d){const was=playing;stop();i=(i+d+qs.length)%qs.length;show(false);if(was)play()}
+
+$('play').onclick=()=>playing?stop():play();
+$('next').onclick=()=>qs.length&&go(1);
+$('prev').onclick=()=>qs.length&&go(-1);
+$('load').onclick=()=>{
+  stop();qs=parse($('data').value);i=0;
+  try{localStorage.setItem('mcq-audio',$('data').value)}catch(e){}
+  if(qs.length)show(false);else $('q').textContent='কোনো প্রশ্ন পাওয়া যায়নি। ফরম্যাট দেখুন।';
+};
+function loadVoices(){
+  voices=speechSynthesis.getVoices();
+  const bn=voices.filter(v=>/^bn/i.test(v.lang));
+  voices=bn.length?bn:voices;
+  $('voice').innerHTML=voices.map(v=>'<option>'+v.name+' ('+v.lang+')</option>').join('')||'<option>ডিফল্ট</option>';
+}
+speechSynthesis.onvoiceschanged=loadVoices;loadVoices();
+let saved='';try{saved=localStorage.getItem('mcq-audio')||''}catch(e){}
+$('data').value=saved||SAMPLE;$('load').click();
+</script>
+</body>
+</html>
